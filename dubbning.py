@@ -14,18 +14,18 @@ def normalize(name):
 
 def get_actors_by_role_from_url(url):
     x = requests.get(url)
-    soup = BeautifulSoup(ftfy.fix_text(x.content), "html.parser")
+    soup = BeautifulSoup(ftfy.fix_text(x.text), "html.parser")
 
     sections = re.split('\n\n([^\n]+):\n', soup.find('pre').text.replace('\r\n', '\n'))
-    sections = [x.partition(' (')[0] for x in sections]
+    sections = [x.partition(' (')[0].lower() for x in sections]
 
-    # TODO: 'Huvudroller', 'SVENSKA RÖSTER', 'Röster'
+    # TODO: 'Huvudroller', 'Röster'
 
-    if 'Svenska röster' not in sections:
+    if 'svenska röster' not in sections:
         print(url)
         print('    ', sections)
         return None
-    voices_index = sections.index('Svenska röster')
+    voices_index = sections.index('svenska röster')
 
     voices = sections[voices_index + 1]
 

@@ -33,6 +33,7 @@ def index(request):
             page_size=5,
             columns__name__filter__include=True,
             columns__name__filter__freetext=True,
+            columns__name__cell__url=lambda row, **_: row.get_absolute_url(),
         )
 
     class IndexPage(Page):

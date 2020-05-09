@@ -30,6 +30,8 @@ DEBUG = False
 ALLOWED_HOSTS = [
     'dubbning.kodare.net',
     'dubbning.kodare.com',
+    '127.0.0.1',
+    'localhost',
 ]
 
 

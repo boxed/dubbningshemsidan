@@ -47,3 +47,6 @@ docs/tri*.rst
 
 # tests
 results/
+
+
+settings_local.py

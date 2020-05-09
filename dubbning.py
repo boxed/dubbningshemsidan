@@ -7,6 +7,10 @@ from tri.struct import Struct
 from dh.base.models import Show, Actor, Role
 
 
+def normalize(name):
+    return name.strip().title()
+
+
 def get_actors_by_role_from_url(url):
     x = requests.get(url)
     soup = BeautifulSoup(x.content)
@@ -22,7 +26,7 @@ def get_actors_by_role_from_url(url):
 
     lines = [x.split('\t') for x in voices.split('\n')[1:] if not x.startswith(' ')]
     lines = [[y for y in line if y] for line in lines]
-    lines = [(line[0], line[-1]) for line in lines if len(line) > 1]
+    lines = [(normalize(line[0]), normalize(line[-1])) for line in lines if len(line) > 1]
     return dict(lines)
 
 

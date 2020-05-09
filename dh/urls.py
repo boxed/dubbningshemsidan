@@ -15,7 +15,26 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.urls import path
+from iommi import Table
+
+from dh.base.models import (
+    Actor,
+    Show,
+    Role,
+)
+from dh.views import (
+    actor,
+    show,
+    index,
+)
 
 urlpatterns = [
+    path('', index),
+    path('actors/', Table(auto__model=Actor).as_view()),
+    path('actors/<int:pk>/', actor),
+    path('shows/', Table(auto__model=Show).as_view()),
+    path('shows/<int:pk>/', show),
+    path('roles/', Table(auto__model=Role).as_view()),
     url(r'^admin/', admin.site.urls),
 ]

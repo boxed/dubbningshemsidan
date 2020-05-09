@@ -5,3 +5,4 @@ tri.struct
 ftfy
 gunicorn
 iommi
+mysqlclient

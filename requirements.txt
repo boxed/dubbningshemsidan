@@ -2,3 +2,5 @@ django
 requests
 bs4
 tri.struct
+ftfy
+gunicorn

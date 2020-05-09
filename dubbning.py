@@ -1,8 +1,9 @@
 import re
 
+import ftfy
 import requests
 from bs4 import BeautifulSoup
-from tri.struct import Struct
+from tri_struct import Struct
 
 from dh.base.models import Show, Actor, Role
 
@@ -13,12 +14,16 @@ def normalize(name):
 
 def get_actors_by_role_from_url(url):
     x = requests.get(url)
-    soup = BeautifulSoup(x.content)
+    soup = BeautifulSoup(ftfy.fix_text(x.content), "html.parser")
 
     sections = re.split('\n\n([^\n]+):\n', soup.find('pre').text.replace('\r\n', '\n'))
+    sections = [x.partition(' (')[0] for x in sections]
+
+    # TODO: 'Huvudroller', 'SVENSKA RÖSTER', 'Röster'
 
     if 'Svenska röster' not in sections:
         print(url)
+        print('    ', sections)
         return None
     voices_index = sections.index('Svenska röster')
 
@@ -33,7 +38,7 @@ def get_actors_by_role_from_url(url):
 def get_data_for_shows():
     index_url = 'http://www.dubbningshemsidan.se/credits/'
     x = requests.get(index_url)
-    soup = BeautifulSoup(x.text)
+    soup = BeautifulSoup(ftfy.fix_text(x.text), "html.parser")
     link_tags = soup.select('.mainbg table a')
     return [
         Struct(
@@ -42,7 +47,7 @@ def get_data_for_shows():
         )
         for x in link_tags
     ]
-    
+
 
 def scrape_dubbningshemsidan():
     for show_data in get_data_for_shows():

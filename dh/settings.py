@@ -25,7 +25,10 @@ SECRET_KEY = '#4lkdyrch2dupg=bh3l(dx22jtt%ec=9*5dhvxyrsw^tpw#9j='
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'dubbning.kodare.net',
+    'dubbning.kodare.com',
+]
 
 
 # Application definition
@@ -76,10 +79,14 @@ WSGI_APPLICATION = 'dh.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'analytics',
+        'USER': os.environ['DOKKU_MYSQL_MYSQL_ENV_MYSQL_USER'],
+        'PASSWORD': os.environ['DOKKU_MYSQL_MYSQL_ENV_MYSQL_PASSWORD'],
+        'HOST': os.environ['DOKKU_MYSQL_MYSQL_PORT_3306_TCP_ADDR'],
     }
 }
 
@@ -121,3 +128,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+try:
+    from .settings_local import *
+except ImportError:
+    pass

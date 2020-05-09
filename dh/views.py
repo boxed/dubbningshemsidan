@@ -1,6 +1,7 @@
 from iommi import (
     Table,
     Page,
+    Header,
 )
 
 from dh.base.models import (
@@ -37,6 +38,8 @@ def index(request):
         )
 
     class IndexPage(Page):
+        title = Header(children__text='Dubbningshemsidans databas')
+
         actors = basic(Actor)
         shows = basic(Show)
         roles = basic(Role)

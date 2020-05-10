@@ -19,13 +19,25 @@ def get_actors_by_role_from_url(url):
     sections = re.split('\n\n([^\n]+):\n', soup.find('pre').text.replace('\r\n', '\n'))
     sections = [x.partition(' (')[0].lower() for x in sections]
 
-    # TODO: 'Huvudroller', 'Röster'
+    search_for = [
+        'svenska röster',
+        'röster',
+        'huvudroller',
+        'credits för svensk version',
+    ]
 
-    if 'svenska röster' not in sections:
+    section_name = None
+    for x in search_for:
+        if x in sections:
+            section_name = x
+            break
+
+    if section_name is None:
         print(url)
         print('    ', sections)
         return None
-    voices_index = sections.index('svenska röster')
+
+    voices_index = sections.index(section_name)
 
     voices = sections[voices_index + 1]
 

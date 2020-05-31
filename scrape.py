@@ -10,3 +10,5 @@ if __name__ == '__main__':
     from dubbning import scrape_dubbningshemsidan
 
     scrape_dubbningshemsidan()
+    # from dubbning import get_actors_by_role_from_url
+    # print(get_actors_by_role_from_url('https://www.dubbningshemsidan.se/credits/trassel/'))

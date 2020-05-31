@@ -41,9 +41,10 @@ def get_actors_by_role_from_url(url):
 
     voices = sections[voices_index + 1]
 
-    lines = [x.split('\t') for x in voices.split('\n')[1:] if not x.startswith(' ')]
+    lines = [x.split('\t') for x in voices.split('\n') if not x.startswith(' ')]
     lines = [[y for y in line if y] for line in lines]
     lines = [(normalize(line[0]), normalize(line[-1])) for line in lines if len(line) > 1]
+    lines = [(a, b) for a, b in lines if not a.endswith(':')]
     return dict(lines)
 
 

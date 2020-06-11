@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Actor(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True, db_index=True)
 
     class Meta:
         ordering = ('name',)
@@ -18,7 +18,10 @@ class Actor(models.Model):
 
 
 class Show(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True, db_index=True)
+    url = models.CharField(max_length=1024, unique=True, db_index=True, null=True, default=None)
+    successful_parse = models.BooleanField(default=False)
+    raw_data = models.TextField(null=True, default=None)
 
     class Meta:
         ordering = ('name',)
@@ -34,7 +37,7 @@ class Show(models.Model):
 
 
 class Role(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     actor = models.ForeignKey(Actor, on_delete=models.PROTECT, related_name='roles')
     show = models.ForeignKey(Show, on_delete=models.PROTECT, related_name='roles')
 

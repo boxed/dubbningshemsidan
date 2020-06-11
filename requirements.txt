@@ -6,3 +6,4 @@ ftfy
 gunicorn
 iommi
 mysqlclient
+tqdm

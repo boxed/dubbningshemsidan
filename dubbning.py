@@ -3,6 +3,7 @@ import re
 import ftfy
 import requests
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 from tri_struct import Struct
 
 from dh.base.models import Show, Actor, Role
@@ -12,11 +13,9 @@ def normalize(name):
     return name.strip().title()
 
 
-def get_actors_by_role_from_url(url):
-    x = requests.get(url)
-    soup = BeautifulSoup(ftfy.fix_text(x.text), "html.parser")
-
-    sections = re.split('\n\n([^\n]+):\n', soup.find('pre').text.replace('\r\n', '\n'))
+def get_actors_by_role_from_raw_data(raw_data):
+    raw_data = '\n'.join([x.strip() for x in raw_data.split('\n')])
+    sections = re.split('\n\n([^\n]+):\n', raw_data.replace('\r\n', '\n'))
     sections = [x.partition(' (')[0].lower() for x in sections]
 
     search_for = [
@@ -24,6 +23,7 @@ def get_actors_by_role_from_url(url):
         'röster',
         'huvudroller',
         'credits för svensk version',
+        'rollista',
     ]
 
     section_name = None
@@ -33,8 +33,6 @@ def get_actors_by_role_from_url(url):
             break
 
     if section_name is None:
-        print(url)
-        print('    ', sections)
         return None
 
     voices_index = sections.index(section_name)
@@ -63,7 +61,7 @@ def get_data_for_shows():
 
 
 def scrape_dubbningshemsidan():
-    for show_data in get_data_for_shows():
+    for show_data in tqdm(get_data_for_shows()):
         # if show_data.name != 'Frost':
         #     continue
         url = show_data.url
@@ -78,12 +76,27 @@ def scrape_dubbningshemsidan():
         if url in urls_without_data:
             continue
 
-        actor_by_role = get_actors_by_role_from_url(url)
+        show, _ = Show.objects.get_or_create(name=show_data.name)
+        if show.raw_data is None:
+            x = requests.get(url)
+            soup = BeautifulSoup(ftfy.fix_text(x.text), "html.parser")
+            raw_data = soup.find('pre').text
+            show.raw_data = raw_data
+        show.url = url
+        show.save()
+
+    parse_raw_data()
+
+
+def parse_raw_data():
+    for show in tqdm(Show.objects.filter(successful_parse=False)):
+        actor_by_role = get_actors_by_role_from_raw_data(show.raw_data)
+        show.successful_parse = actor_by_role is not None
+        show.save()
+        show.roles.all().delete()
 
         if not actor_by_role:
             continue
-
-        show, _ = Show.objects.get_or_create(name=show_data.name)
 
         for role_name, actor_name in actor_by_role.items():
             actor, _ = Actor.objects.get_or_create(name=actor_name)

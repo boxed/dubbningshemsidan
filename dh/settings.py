@@ -134,6 +134,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = Path(__file__).parent.parent / 'static/'
 
+IOMMI_DEFAULT_STYLE = 'semantic_ui'
+
 try:
     from .settings_local import *
 except ImportError:

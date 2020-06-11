@@ -19,7 +19,7 @@ class Actor(models.Model):
 
 class Show(models.Model):
     name = models.CharField(max_length=255, unique=True, db_index=True)
-    url = models.CharField(max_length=1024, unique=True, db_index=True, null=True, default=None)
+    url = models.CharField(max_length=255, unique=True, db_index=True, null=True, default=None)
     successful_parse = models.BooleanField(default=False)
     raw_data = models.TextField(null=True, default=None)
 

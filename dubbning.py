@@ -6,44 +6,80 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from tri_struct import Struct
 
-from dh.base.models import Show, Actor, Role
+from dh.base.models import (
+    Show,
+    Actor,
+    Role,
+    MetaData,
+    MetaDataObject,
+)
 
 
 def normalize(name):
     return name.strip().title()
 
 
-def get_actors_by_role_from_raw_data(raw_data):
-    raw_data = '\n'.join([x.strip() for x in raw_data.split('\n')])
-    sections = re.split('\n\n([^\n]+):\n', raw_data.replace('\r\n', '\n'))
-    sections = [x.partition(' (')[0].lower() for x in sections]
+def parse0(lines):
+    return [re.sub('\t+', '\t', l.rstrip()) for l in lines]
 
-    search_for = [
-        'svenska röster',
-        'röster',
-        'huvudroller',
-        'credits för svensk version',
-        'rollista',
-    ]
 
-    section_name = None
-    for x in search_for:
-        if x in sections:
-            section_name = x
-            break
+def parse1(lines):
+    return [l.split('\t') for l in lines]
 
-    if section_name is None:
-        return None
 
-    voices_index = sections.index(section_name)
+def parse2(rows):
+    r = []
+    col0 = None
+    for row in rows:
+        # This is a heading, store for next lines
+        if row[0] and row[0].endswith(':'):
+            col0 = row[0]
+        # There was a previous heading and the leftmost column is blank
+        elif col0 and len(row) > 1 and not row[0]:
+            # Use the previous heading
+            row[0] = col0
+        # This is a new paragraph, forget the last heading
+        if len(row) == 0 or (len(row) == 1 and not row[0]):
+            col0 = None
+        r.append(row)
+    return r
 
-    voices = sections[voices_index + 1]
 
-    lines = [x.split('\t') for x in voices.split('\n') if not x.startswith(' ')]
-    lines = [[y for y in line if y] for line in lines]
-    lines = [(normalize(line[0]), normalize(line[-1])) for line in lines if len(line) > 1]
-    lines = [(a, b) for a, b in lines if not a.endswith(':')]
-    return dict(lines)
+def parse3(show, rows):
+    r = []
+    heading = None
+    for i, row in enumerate(rows):
+        # New paragraph, forget heading
+        if not row or not row[0]:
+            heading = None
+
+        # This is a heading, store for next lines
+        if len(row) == 1 and row[0].endswith(':'):
+            heading = row[0].rstrip(':')
+            r.append(MetaData.objects.create(index=i, show=show, key='', value=row[0]))
+        elif len(row) == 2 and row[0].endswith(':'):
+            role = row[0].rstrip(':')
+            r.append(Role.objects.create(index=i, show=show, name=role, actor=Actor.objects.get_or_create(name=row[1])[0]))
+        elif heading and len(row) == 2:
+            r.append(Role.objects.create(index=i, show=show, name=row[0], actor=Actor.objects.get_or_create(name=row[1])[0]))
+        elif heading:
+            value = '\t'.join(row)
+            metadata_object, _ = MetaDataObject.objects.get_or_create(name=value)
+            r.append(MetaData.objects.create(index=i, show=show, key=heading, value=value, metadata_object=metadata_object))
+        else:
+            r.append(MetaData.objects.create(index=i, show=show, key='', value='\t'.join(row).strip()))
+
+    return r
+
+
+def parse(show):
+    show.roles.all().delete()
+    show.metadata.all().delete()
+    lines = show.raw_data.split('\n')
+    p0 = parse0(lines)
+    p1 = parse1(p0)
+    p2 = parse2(p1)
+    parse3(show, p2)
 
 
 def get_data_for_shows():
@@ -61,6 +97,7 @@ def get_data_for_shows():
 
 
 def scrape_dubbningshemsidan():
+    print('Fetching raw data...')
     for show_data in tqdm(get_data_for_shows()):
         # if show_data.name != 'Frost':
         #     continue
@@ -89,15 +126,8 @@ def scrape_dubbningshemsidan():
 
 
 def parse_raw_data():
-    for show in tqdm(Show.objects.filter(successful_parse=False)):
-        actor_by_role = get_actors_by_role_from_raw_data(show.raw_data)
-        show.successful_parse = actor_by_role is not None
+    print('Parsing...')
+    for show in tqdm(Show.objects.all()):
+        parse(show)
+        show.successful_parse = True
         show.save()
-        show.roles.all().delete()
-
-        if not actor_by_role:
-            continue
-
-        for role_name, actor_name in actor_by_role.items():
-            actor, _ = Actor.objects.get_or_create(name=actor_name)
-            role, _ = Role.objects.get_or_create(name=role_name, actor=actor, show=show)

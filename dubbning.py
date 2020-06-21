@@ -19,6 +19,10 @@ def normalize(name):
     return name.strip().title()
 
 
+def parse_spaces_to_tabs(lines):
+    return [re.sub('  +', '\t', l.rstrip()) for l in lines]
+
+
 def parse0(lines):
     return [re.sub('\t+', '\t', l.rstrip()) for l in lines]
 
@@ -45,6 +49,11 @@ def parse2(rows):
     return r
 
 
+skiplist = {
+    'fotnot',
+}
+
+
 def parse3(show, rows):
     r = []
     heading = None
@@ -66,6 +75,8 @@ def parse3(show, rows):
             value = '\t'.join(row)
             metadata_object, _ = MetaDataObject.objects.get_or_create(name=value)
             r.append(MetaData.objects.create(index=i, show=show, key=heading, value=value, metadata_object=metadata_object))
+        elif len(row) == 2 and row[0] and row[1]:
+            r.append(Role.objects.create(index=i, show=show, name=row[0], actor=Actor.objects.get_or_create(name=row[1])[0]))
         else:
             r.append(MetaData.objects.create(index=i, show=show, key='', value='\t'.join(row).strip()))
 
@@ -76,7 +87,8 @@ def parse(show):
     show.roles.all().delete()
     show.metadata.all().delete()
     lines = show.raw_data.split('\n')
-    p0 = parse0(lines)
+    p_tabs = parse_spaces_to_tabs(lines)
+    p0 = parse0(p_tabs)
     p1 = parse1(p0)
     p2 = parse2(p1)
     parse3(show, p2)

@@ -62,6 +62,10 @@ def metadata_object(request, pk):
 def show(request, pk):
     show = Show.objects.get(pk=pk)
 
+    if 'reparse' in request.GET:
+        from dubbning import parse
+        parse(show)
+
     data = sorted(
         list(show.roles.all()) + list(show.metadata.all()),
         key=lambda x: x.index
@@ -76,10 +80,12 @@ def show(request, pk):
             page_size=None,
             columns=dict(
                 col0__auto_rowspan=True,
+                col0__cell__attrs__colspan=lambda row, **_: 2 if row.col1 is None else 1,
                 col0__cell__url=lambda row, **_: row.col0_get_absolute_url(),
                 col1__cell__url=lambda row, **_: row.col1_get_absolute_url(),
             )
         )
+        raw_data = html.pre(show.raw_data, include='raw_data' in request.GET)
 
     return ShowPage()
 

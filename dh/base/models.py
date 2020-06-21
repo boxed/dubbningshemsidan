@@ -115,11 +115,15 @@ class MetaData(models.Model):
 
     @property
     def col0(self):
-        return self.metadata_object or self.value
+        if not self.key:
+            return self.value
+        return self.metadata_object or self.key
 
     @property
     def col1(self):
-        return self.key if self.metadata_object is None else None
+        if not self.key:
+            return None
+        return self.value if self.metadata_object is None else None
 
     def col0_get_absolute_url(self):
         return self.metadata_object.get_absolute_url() if self.metadata_object else None

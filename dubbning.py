@@ -62,21 +62,28 @@ def parse3(show, rows):
         if not row or not row[0]:
             heading = None
 
+        r0_lower = row[0].lower().rstrip(':') if row else None
+
         # This is a heading, store for next lines
         if len(row) == 1 and row[0].endswith(':'):
             heading = row[0].rstrip(':')
             r.append(MetaData.objects.create(index=i, show=show, key='', value=row[0]))
-        elif len(row) == 2 and row[0].endswith(':'):
+        elif len(row) == 2 and row[0].endswith(':') and r0_lower not in skiplist:
             role = row[0].rstrip(':')
+            assert row[0] != 'Fotnot:'
             r.append(Role.objects.create(index=i, show=show, name=role, actor=Actor.objects.get_or_create(name=row[1])[0]))
         elif heading and len(row) == 2:
+            assert row[0] != 'Fotnot:'
             r.append(Role.objects.create(index=i, show=show, name=row[0], actor=Actor.objects.get_or_create(name=row[1])[0]))
         elif heading:
             value = '\t'.join(row)
             metadata_object, _ = MetaDataObject.objects.get_or_create(name=value)
             r.append(MetaData.objects.create(index=i, show=show, key=heading, value=value, metadata_object=metadata_object))
-        elif len(row) == 2 and row[0] and row[1]:
+        elif len(row) == 2 and row[0] and row[1] and r0_lower not in skiplist:
+            assert row[0] != 'Fotnot:'
             r.append(Role.objects.create(index=i, show=show, name=row[0], actor=Actor.objects.get_or_create(name=row[1])[0]))
+        elif len(row) == 2:
+            r.append(MetaData.objects.create(index=i, show=show, key=row[0], value=row[1]))
         else:
             r.append(MetaData.objects.create(index=i, show=show, key='', value='\t'.join(row).strip()))
 

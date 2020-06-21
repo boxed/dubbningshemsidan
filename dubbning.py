@@ -64,20 +64,22 @@ def parse3(show, rows):
 
         r0_lower = row[0].lower().rstrip(':') if row else None
 
+        invalid_first_char = ('(', '"', '-')
+
         # This is a heading, store for next lines
         if len(row) == 1 and row[0].endswith(':'):
             heading = row[0].rstrip(':')
             r.append(MetaData.objects.create(index=i, show=show, key='', value=row[0]))
-        elif len(row) == 2 and row[0].endswith(':') and r0_lower not in skiplist and not row[0][0] in ('(', '"'):
+        elif len(row) == 2 and row[0].endswith(':') and r0_lower not in skiplist and not row[0][0] in invalid_first_char:
             role = row[0].rstrip(':')
             r.append(Role.objects.create(index=i, show=show, name=role, actor=Actor.objects.get_or_create(name=row[1])[0]))
-        elif heading and len(row) == 2 and not row[0][0] in ('(', '"'):
+        elif heading and len(row) == 2 and not row[0][0] in invalid_first_char:
             r.append(Role.objects.create(index=i, show=show, name=row[0], actor=Actor.objects.get_or_create(name=row[1])[0]))
         elif heading:
             value = '\t'.join(row)
             metadata_object, _ = MetaDataObject.objects.get_or_create(name=value)
             r.append(MetaData.objects.create(index=i, show=show, key=heading, value=value, metadata_object=metadata_object))
-        elif len(row) == 2 and row[0] and row[1] and r0_lower not in skiplist and not row[0][0] in ('(', '"'):
+        elif len(row) == 2 and row[0] and row[1] and r0_lower not in skiplist and not row[0][0] in invalid_first_char:
             r.append(Role.objects.create(index=i, show=show, name=row[0], actor=Actor.objects.get_or_create(name=row[1])[0]))
         elif len(row) == 2:
             r.append(MetaData.objects.create(index=i, show=show, key=row[0], value=row[1]))

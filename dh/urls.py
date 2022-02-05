@@ -24,33 +24,41 @@ from dh.base.models import (
     MetaDataObject,
 )
 from dh.views import (
-    actor,
-    show,
     index,
     metadata_object,
     role,
     search,
+    show,
 )
 
 urlpatterns = [
     path('', index),
     path('search/', search),
     path('actors/', Table(auto__model=Actor).as_view()),
-    path('actors/<int:pk>/', actor),
+    path(
+        'actors/<actor_pk>/',
+        Table(
+            title=lambda params, **_: params.actor.name,
+            auto__model=Role,
+            rows=lambda params, **_: params.actor.roles.all(),
+            columns__actor__include=False,
+            columns__index__include=False,
+        ).as_view()
+    ),
     path('shows/', Table(auto__model=Show).as_view()),
-    path('shows/<int:pk>/', show),
+    path('shows/<show_pk>/', show),
     path('shows/not-parsed/', Table(
         auto__rows=Show.objects.filter(successful_parse=False),
         columns__name__cell__url=lambda row, **_: row.get_absolute_url(),
     ).as_view()),
     path('roles/', Table(auto__model=Role).as_view()),
-    path('roles/<int:pk>/', role),
+    path('roles/<role_pk>/', role),
     path('metadata/', Table(
         auto__model=MetaDataObject,
         columns__name__cell__url=lambda row, **_: row.get_absolute_url(),
         columns__name__filter__include=True,
         columns__name__filter__freetext=True,
     ).as_view()),
-    path('metadata/<int:pk>/', metadata_object),
+    path('metadata/<meta_data_object_pk>/', metadata_object),
     path('admin/', admin.site.urls),
 ]

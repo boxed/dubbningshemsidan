@@ -6,6 +6,7 @@ from iommi import (
     Table,
     Form,
 )
+from iommi.path import decode_path
 
 from dh.base.models import (
     Actor,
@@ -34,34 +35,19 @@ def role(request, pk):
     return MyPage()
 
 
-def actor(request, pk):
-    actor = Actor.objects.get(pk=pk)
+@decode_path
+def metadata_object(request, meta_data_object):
     return Table(
-        title=actor.name,
-        auto__rows=actor.roles.all(),
-        columns__actor__include=False,
+        title=str(meta_data_object),
+        auto__rows=MetaData.objects.filter(metadata_object=meta_data_object),
+        columns__value__include=False,
         columns__index__include=False,
+        columns__metadata_object__include=False,
     )
 
 
-def metadata_object(request, pk):
-    obj = MetaDataObject.objects.get(pk=pk)
-
-    class MyPage(Page):
-        shows = Table(
-            title=str(obj),
-            auto__rows=MetaData.objects.filter(metadata_object=obj),
-            columns__value__include=False,
-            columns__index__include=False,
-            columns__metadata_object__include=False,
-        )
-
-    return MyPage()
-
-
-def show(request, pk):
-    show = Show.objects.get(pk=pk)
-
+@decode_path
+def show(request, show):
     if 'reparse' in request.GET:
         from dubbning import parse
         parse(show)

@@ -4,6 +4,5 @@ bs4
 tri.struct
 ftfy
 gunicorn
-iommi
-mysqlclient
+iommi==4.5.1
 tqdm

@@ -6,7 +6,7 @@ from django.template import (
 
 
 class Actor(models.Model):
-    name = models.CharField(max_length=255, unique=True, db_index=True)
+    name = models.CharField(max_length=255, unique=True, db_index=True, db_collation='NOCASE')
 
     class Meta:
         ordering = ('name',)

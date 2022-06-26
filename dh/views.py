@@ -116,19 +116,16 @@ def search(request):
     return MyPage()
 
 
-def index(request):
-    class IndexPage(Page):
-        title = Header(children__text='Dubbningshemsidans databas')
+class IndexPage(Page):
+    title = Header(children__text='Dubbningshemsidans databas')
 
-        search = search_form
-        focus_on_search_form = focus_on_search_form
+    search = search_form
+    focus_on_search_form = focus_on_search_form
 
-        shows = NameLinkTable(
-            auto__model=Show,
-            columns__raw_data__include=False,
-            columns__successful_parse__include=False,
-            columns__url__cell__url=lambda value, **_: value,
-        )
-        actors = NameLinkTable(auto__model=Actor)
-
-    return IndexPage()
+    shows = NameLinkTable(
+        auto__model=Show,
+        columns__raw_data__include=False,
+        columns__successful_parse__include=False,
+        columns__url__cell__url=lambda value, **_: value,
+    )
+    actors = NameLinkTable(auto__model=Actor)

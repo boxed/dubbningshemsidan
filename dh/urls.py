@@ -24,7 +24,7 @@ from dh.base.models import (
     MetaDataObject,
 )
 from dh.views import (
-    index,
+    IndexPage,
     metadata_object,
     role,
     search,
@@ -32,7 +32,7 @@ from dh.views import (
 )
 
 urlpatterns = [
-    path('', index),
+    path('', IndexPage().as_view()),
     path('search/', search),
     path('actors/', Table(auto__model=Actor).as_view()),
     path(
